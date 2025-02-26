@@ -1,0 +1,37 @@
+{
+  "name": "mi-app-nextjs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.750.0",
+    "@hookform/resolvers": "^4.1.2",
+    "canvas-confetti": "^1.9.3",
+    "dotenv": "^16.4.7",
+    "firebase": "^11.3.1",
+    "formidable": "^3.5.2",
+    "framer-motion": "^12.4.7",
+    "googleapis": "^144.0.0",
+    "next": "15.1.7",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.2",
+    "react-hot-toast": "^2.5.2",
+    "react-icons": "^5.5.0",
+    "react-particles": "^2.12.2",
+    "tsparticles": "^3.8.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "eslint": "^9",
+    "eslint-config-next": "15.1.7",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1"
+  }
+}
