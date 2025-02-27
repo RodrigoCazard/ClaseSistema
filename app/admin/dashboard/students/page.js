@@ -1,16 +1,16 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
-import { FaPlus, FaMinus, FaTrash, FaArrowLeft } from "react-icons/fa"
-import { collection, getDocs, doc, updateDoc, setDoc, deleteDoc } from "firebase/firestore"
+import { FaPlus, FaArrowLeft } from "react-icons/fa"
+import { collection, getDocs, doc, setDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import toast from "react-hot-toast"
 import LoadingSpinner from "@/components/ui/LoadingSpinner"
+import { NeoBrutalButton, NeoBrutalInput, NeoBrutalCard, neoBrutalStyles, neoBrutalColors } from "@/styles/neobrutalism.js"
 
 const schema = z.object({
   ci: z.string().length(8, "La CI debe tener exactamente 8 caracteres"),
@@ -21,6 +21,7 @@ const schema = z.object({
 export default function ManageStudentsPage() {
   const [students, setStudents] = useState([])
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
   const router = useRouter()
   const {
     register,
@@ -30,8 +31,6 @@ export default function ManageStudentsPage() {
   } = useForm({
     resolver: zodResolver(schema),
   })
-
-  const pointsRefs = useRef({})
 
   useEffect(() => {
     const adminAuth = localStorage.getItem("adminAuth")
@@ -59,31 +58,6 @@ export default function ManageStudentsPage() {
     }
   }
 
-  const handleUpdatePoints = async (studentId, currentPoints, pointsToUpdate) => {
-    if (isNaN(pointsToUpdate) || pointsToUpdate === 0) return
-
-    try {
-      const studentRef = doc(db, "estudiantes", studentId)
-      const newPoints = currentPoints + pointsToUpdate
-
-      await updateDoc(studentRef, { Puntos: newPoints })
-
-      const movementRef = doc(collection(db, "movimientos"))
-      await setDoc(movementRef, {
-        ci: studentId,
-        fecha: new Date(),
-        ganados: pointsToUpdate > 0,
-        puntos: Math.abs(pointsToUpdate),
-      })
-
-      fetchStudents()
-      toast.success("Puntos actualizados correctamente y movimiento registrado")
-    } catch (error) {
-      console.error("Error updating points and recording transaction:", error)
-      toast.error("Error al actualizar los puntos o registrar el movimiento")
-    }
-  }
-
   const onSubmit = async (data) => {
     try {
       await setDoc(doc(db, "estudiantes", data.ci), {
@@ -100,16 +74,11 @@ export default function ManageStudentsPage() {
     }
   }
 
-  const handleDeleteStudent = async (studentId) => {
-    try {
-      await deleteDoc(doc(db, "estudiantes", studentId))
-      fetchStudents()
-      toast.success("Estudiante eliminado correctamente")
-    } catch (error) {
-      console.error("Error deleting student:", error)
-      toast.error("Error al eliminar el estudiante")
-    }
-  }
+  const filteredStudents = students.filter(
+    (student) =>
+      student.id.includes(searchTerm) ||
+      (student.nombreCompleto && student.nombreCompleto.toLowerCase().includes(searchTerm.toLowerCase())),
+  )
 
   if (loading) {
     return (
@@ -120,128 +89,87 @@ export default function ManageStudentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-900 to-gray-900 text-white flex flex-col items-center justify-start p-4 relative overflow-hidden">
-      <motion.button
+    <div
+      className={`min-h-screen bg-[${neoBrutalColors.background}] text-black flex flex-col items-center justify-start p-8 relative overflow-hidden`}
+    >
+      <NeoBrutalButton
         onClick={() => router.push("/admin/dashboard")}
-        className="absolute top-4 left-4 bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition-colors"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+        className={`absolute top-8 left-8 bg-[${neoBrutalColors.accent2}] text-white`}
       >
         <FaArrowLeft />
-      </motion.button>
-      <motion.div
-        className="bg-gray-800 bg-opacity-80 p-8 rounded-lg shadow-lg w-full max-w-4xl backdrop-filter backdrop-blur-lg relative mt-16"
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <h1 className="text-3xl font-bold mb-6 text-center">Gestión de Estudiantes</h1>
+      </NeoBrutalButton>
+      <NeoBrutalCard className="w-full max-w-4xl relative mt-16">
+        <h1 className="text-3xl font-black mb-8 text-center">GESTIÓN DE ESTUDIANTES</h1>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="mb-8 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <input
+              <NeoBrutalInput
                 {...register("ci")}
                 type="text"
                 placeholder="CI del nuevo estudiante"
-                className="w-full p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={errors.ci ? "border-red-500" : ""}
               />
-              {errors.ci && <p className="text-red-500 mt-1 text-sm">{errors.ci.message}</p>}
+              {errors.ci && <p className="text-red-700 font-bold mt-1">{errors.ci.message}</p>}
             </div>
             <div>
-              <input
+              <NeoBrutalInput
                 {...register("fullName")}
                 type="text"
                 placeholder="Nombre completo"
-                className="w-full p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={errors.fullName ? "border-red-500" : ""}
               />
-              {errors.fullName && <p className="text-red-500 mt-1 text-sm">{errors.fullName.message}</p>}
+              {errors.fullName && <p className="text-red-700 font-bold mt-1">{errors.fullName.message}</p>}
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <input
+          <div className="flex items-center space-x-2 mt-4">
+            <NeoBrutalInput
               {...register("points", { valueAsNumber: true })}
               type="number"
               placeholder="Puntos iniciales"
-              className="w-full p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={errors.points ? "border-red-500" : ""}
             />
-            <button
-              type="submit"
-              className="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition-colors"
-            >
+            <NeoBrutalButton type="submit" className={`bg-[${neoBrutalColors.accent1}]`}>
               <FaPlus />
-            </button>
+            </NeoBrutalButton>
           </div>
-          {errors.points && <p className="text-red-500 mt-1 text-sm">{errors.points.message}</p>}
+          {errors.points && <p className="text-red-700 font-bold mt-1">{errors.points.message}</p>}
         </form>
 
+        <div className="mb-4">
+          <NeoBrutalInput
+            type="text"
+            placeholder="Buscar por CI o nombre"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className={`w-full ${neoBrutalStyles.table}`}>
             <thead>
-              <tr className="border-b border-gray-700">
-                <th className="py-2 px-4">CI</th>
-                <th className="py-2 px-4">Nombre</th>
-                <th className="py-2 px-4">Puntos</th>
-                <th className="py-2 px-4">Acciones</th>
+              <tr className={neoBrutalStyles.tableHeader}>
+                <th className="p-3">CI</th>
+                <th className="p-3">Nombre</th>
+                <th className="p-3">Puntos</th>
               </tr>
             </thead>
             <tbody>
-              {students.map((student) => (
-                <tr key={student.id} className="border-b border-gray-700">
-                  <td className="py-2 px-4">{student.id}</td>
-                  <td className="py-2 px-4">{student.nombreCompleto || "No especificado"}</td>
-                  <td className="py-2 px-4">{student.Puntos}</td>
-                  <td className="py-2 px-4 flex items-center">
-                    <input
-                      type="number"
-                      defaultValue={0}
-                      ref={(el) => (pointsRefs.current[student.id] = el)}
-                      onChange={(e) => (e.target.value = Math.max(0, Number.parseInt(e.target.value) || 0))}
-                      className="w-20 p-1 mr-2 bg-gray-700 rounded"
-                    />
-                    <motion.button
-                      onClick={() =>
-                        handleUpdatePoints(
-                          student.id,
-                          student.Puntos,
-                          Number.parseInt(pointsRefs.current[student.id].value),
-                        )
-                      }
-                      className="mr-2 bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition-colors"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <FaPlus />
-                    </motion.button>
-                    <motion.button
-                      onClick={() =>
-                        handleUpdatePoints(
-                          student.id,
-                          student.Puntos,
-                          -Number.parseInt(pointsRefs.current[student.id].value),
-                        )
-                      }
-                      className="mr-2 bg-yellow-500 text-white p-2 rounded-full hover:bg-yellow-600 transition-colors"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <FaMinus />
-                    </motion.button>
-                    <motion.button
-                      onClick={() => handleDeleteStudent(student.id)}
-                      className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <FaTrash />
-                    </motion.button>
-                  </td>
+              {filteredStudents.map((student) => (
+                <tr
+                  key={student.id}
+                  className={`${neoBrutalStyles.tableCell} hover:bg-gray-100 cursor-pointer`}
+                  onClick={() => router.push(`/admin/dashboard/students/${student.id}`)}
+                >
+                  <td className="p-3">{student.id}</td>
+                  <td className="p-3">{student.nombreCompleto || "No especificado"}</td>
+                  <td className="p-3">{student.Puntos}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </motion.div>
+      </NeoBrutalCard>
     </div>
   )
 }

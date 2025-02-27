@@ -9,6 +9,7 @@ import { FaLock, FaUnlock } from "react-icons/fa"
 import ConfirmDialog from "@/components/ui/ConfirmDialog"
 import DonationDialog from "@/components/ui/DonationDialog"
 import SuccessPopup from "@/components/ui/SuccessPopup"
+import { NeoBrutalButton, NeoBrutalCard, neoBrutalColors } from "@/styles/neobrutalism"
 
 export default function Tienda({ puntos, userData, onActualizarPuntos }) {
   const [productos, setProductos] = useState({ normal: [], unlockable: [] })
@@ -27,7 +28,6 @@ export default function Tienda({ puntos, userData, onActualizarPuntos }) {
           ...doc.data(),
         }))
 
-        // Separar productos normales y desbloqueables
         const normal = productosList.filter((p) => !p.desbloqueable)
         const unlockable = productosList.filter((p) => p.desbloqueable)
 
@@ -120,7 +120,6 @@ export default function Tienda({ puntos, userData, onActualizarPuntos }) {
 
             onActualizarPuntos(newPoints, pointsToAdd)
 
-            // Refresh products
             const tiendaCollection = collection(db, "tienda")
             const tiendaSnapshot = await getDocs(tiendaCollection)
             const productosList = tiendaSnapshot.docs.map((doc) => ({
@@ -144,7 +143,9 @@ export default function Tienda({ puntos, userData, onActualizarPuntos }) {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+        <div
+          className={`animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-[${neoBrutalColors.accent1}]`}
+        ></div>
       </div>
     )
   }
@@ -153,30 +154,26 @@ export default function Tienda({ puntos, userData, onActualizarPuntos }) {
     <div className="space-y-8">
       {/* Normal Products Section */}
       <div>
-        <h2 className="text-2xl font-bold mb-4">Productos Disponibles</h2>
+        <h2 className="text-2xl font-black mb-4">Productos Disponibles</h2>
         <motion.div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {productos.normal.map((producto) => (
-            <motion.div
+            <NeoBrutalCard
               key={producto.id}
-              className="bg-gray-800 bg-opacity-80 rounded-lg shadow-lg overflow-hidden backdrop-filter backdrop-blur-lg"
+              className="flex flex-col items-center justify-center h-full"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <div className="p-6 flex flex-col items-center justify-center h-full">
-                <h3 className="text-xl font-bold mb-2">{producto.nombre}</h3>
-                <p className="text-blue-500 font-bold mb-4">{producto.precio} puntos</p>
-                <p className="text-center mb-4">{producto.descripcion}</p>
-                <motion.button
-                  onClick={() => handleCompra(userData, producto)}
-                  disabled={puntos < producto.precio}
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-500 transition-colors"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  Canjear
-                </motion.button>
-              </div>
-            </motion.div>
+              <h3 className="text-xl font-bold mb-2">{producto.nombre}</h3>
+              <p className={`text-[${neoBrutalColors.accent1}] font-bold mb-4`}>{producto.precio} puntos</p>
+              <p className="text-center mb-4">{producto.descripcion}</p>
+              <NeoBrutalButton
+                onClick={() => handleCompra(userData, producto)}
+                disabled={puntos < producto.precio}
+                className={`bg-[${neoBrutalColors.accent1}] text-black ${puntos < producto.precio ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                Canjear
+              </NeoBrutalButton>
+            </NeoBrutalCard>
           ))}
         </motion.div>
       </div>
@@ -184,59 +181,59 @@ export default function Tienda({ puntos, userData, onActualizarPuntos }) {
       {/* Unlockable Products Section */}
       {productos.unlockable.length > 0 && (
         <div>
-          <h2 className="text-2xl font-bold mb-4">Productos Desbloqueables</h2>
+          <h2 className="text-2xl font-black mb-4">Productos Desbloqueables</h2>
           <motion.div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {productos.unlockable.map((producto) => (
-              <motion.div
+              <NeoBrutalCard
                 key={producto.id}
-                className="bg-gray-800 bg-opacity-80 rounded-lg shadow-lg overflow-hidden backdrop-filter backdrop-blur-lg"
+                className="flex flex-col items-center justify-center h-full"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <div className="p-6 flex flex-col items-center justify-center h-full">
-                  <div className="flex items-center gap-2 mb-2">
-                    {producto.puntosAcumulados >= producto.precio ? (
-                      <FaUnlock className="text-green-500" />
-                    ) : (
-                      <FaLock className="text-yellow-500" />
-                    )}
-                    <h3 className="text-xl font-bold">{producto.nombre}</h3>
-                  </div>
-                  <p className="text-blue-500 font-bold mb-2">{producto.precio} puntos necesarios</p>
-                  <p className="text-center mb-4">{producto.descripcion}</p>
-
-                  {/* Barra de progreso */}
-                  <div className="w-full bg-gray-700 rounded-full h-4 mb-4">
-                    <div
-                      className="bg-blue-500 h-4 rounded-full transition-all duration-500"
-                      style={{
-                        width: `${Math.min(100, ((producto.puntosAcumulados || 0) / producto.precio) * 100)}%`,
-                      }}
-                    />
-                  </div>
-
-                  <div className="text-sm mb-4">
-                    <span className="text-green-500">{producto.puntosAcumulados || 0}</span>
-                    <span className="text-gray-400"> / </span>
-                    <span className="text-blue-500">{producto.precio}</span>
-                    <span className="text-gray-400"> puntos acumulados</span>
-                  </div>
-
+                <div className="flex items-center gap-2 mb-2">
                   {producto.puntosAcumulados >= producto.precio ? (
-                    <p className="text-green-500 font-bold">¡Producto Desbloqueado!</p>
+                    <FaUnlock className={`text-[${neoBrutalColors.accent1}]`} />
                   ) : (
-                    <motion.button
-                      onClick={() => handleDonarClick(userData, producto)}
-                      disabled={puntos <= 0}
-                      className="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 disabled:bg-gray-500 transition-colors"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      Donar Puntos
-                    </motion.button>
+                    <FaLock className={`text-[${neoBrutalColors.accent2}]`} />
                   )}
+                  <h3 className="text-xl font-bold">{producto.nombre}</h3>
                 </div>
-              </motion.div>
+                <p className={`text-[${neoBrutalColors.accent1}] font-bold mb-2`}>
+                  {producto.precio} puntos necesarios
+                </p>
+                <p className="text-center mb-4">{producto.descripcion}</p>
+
+                {/* Barra de progreso */}
+                <div
+                  className={`w-full bg-[${neoBrutalColors.background}] rounded-full h-4 mb-4 border-4 border-black`}
+                >
+                  <div
+                    className={`bg-[${neoBrutalColors.accent1}] h-full rounded-full transition-all duration-500`}
+                    style={{
+                      width: `${Math.min(100, ((producto.puntosAcumulados || 0) / producto.precio) * 100)}%`,
+                    }}
+                  />
+                </div>
+
+                <div className="text-sm mb-4">
+                  <span className={`text-[${neoBrutalColors.accent1}]`}>{producto.puntosAcumulados || 0}</span>
+                  <span className="text-gray-700"> / </span>
+                  <span className={`text-[${neoBrutalColors.accent1}]`}>{producto.precio}</span>
+                  <span className="text-gray-700"> puntos acumulados</span>
+                </div>
+
+                {producto.puntosAcumulados >= producto.precio ? (
+                  <p className={`text-[${neoBrutalColors.accent1}] font-bold`}>¡Producto Desbloqueado!</p>
+                ) : (
+                  <NeoBrutalButton
+                    onClick={() => handleDonarClick(userData, producto)}
+                    disabled={puntos <= 0}
+                    className={`bg-[${neoBrutalColors.accent2}] text-black ${puntos <= 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    Donar Puntos
+                  </NeoBrutalButton>
+                )}
+              </NeoBrutalCard>
             ))}
           </motion.div>
         </div>

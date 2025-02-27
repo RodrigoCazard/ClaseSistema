@@ -1,57 +1,54 @@
-"use client"; // Asegúrate de que este componente sea de cliente
+"use client"
 
-import { useEffect, useState } from "react";
-import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react"
+import { collection, getDocs, query, orderBy } from "firebase/firestore"
+import { db } from "@/lib/firebase"
+import { motion } from "framer-motion"
+import { NeoBrutalCard, neoBrutalColors, neoBrutalStyles } from "@/styles/neobrutalism"
 
 const Leaderboard = () => {
-  const [estudiantes, setEstudiantes] = useState([]);
-  const [loggedInStudent, setLoggedInStudent] = useState(null); // Estudiante logueado
-  const [loading, setLoading] = useState(true);
+  const [estudiantes, setEstudiantes] = useState([])
+  const [loggedInStudent, setLoggedInStudent] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchEstudiantes = async () => {
       try {
-        // Obtener el estudiante logueado desde localStorage
-        const storedUserData = localStorage.getItem("userData");
+        const storedUserData = localStorage.getItem("userData")
         if (storedUserData) {
-          const parsedUserData = JSON.parse(storedUserData);
-          setLoggedInStudent(parsedUserData);
+          const parsedUserData = JSON.parse(storedUserData)
+          setLoggedInStudent(parsedUserData)
         }
 
-        // Obtener todos los estudiantes ordenados por puntos
-        const q = query(collection(db, "estudiantes"), orderBy("Puntos", "desc"));
-        const querySnapshot = await getDocs(q);
+        const q = query(collection(db, "estudiantes"), orderBy("Puntos", "desc"))
+        const querySnapshot = await getDocs(q)
         const estudiantesList = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-        }));
+        }))
 
-        // Calcular la posición del estudiante logueado
         if (storedUserData) {
-          const parsedUserData = JSON.parse(storedUserData);
-          const estudianteIndex = estudiantesList.findIndex((e) => e.id === parsedUserData.ci);
+          const parsedUserData = JSON.parse(storedUserData)
+          const estudianteIndex = estudiantesList.findIndex((e) => e.id === parsedUserData.ci)
           if (estudianteIndex !== -1) {
-            parsedUserData.posicion = estudianteIndex + 1; // Guardar la posición
-            setLoggedInStudent(parsedUserData);
+            parsedUserData.posicion = estudianteIndex + 1
+            setLoggedInStudent(parsedUserData)
           }
         }
 
-        // Obtener el top 3
-        setEstudiantes(estudiantesList.slice(0, 3));
+        setEstudiantes(estudiantesList.slice(0, 3))
       } catch (error) {
-        console.error("Error fetching estudiantes:", error);
+        console.error("Error fetching estudiantes:", error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchEstudiantes();
-  }, []);
+    fetchEstudiantes()
+  }, [])
 
   if (loading) {
-    return <p className="text-center text-gray-400">Cargando...</p>;
+    return <p className="text-center text-gray-700">Cargando...</p>
   }
 
   return (
@@ -61,39 +58,38 @@ const Leaderboard = () => {
         {estudiantes.map((estudiante, index) => (
           <motion.div
             key={estudiante.id}
-            className={`p-4 rounded-lg flex items-center justify-between ${
+            className={`${neoBrutalStyles.card} flex items-center justify-between ${
               index === 0
-                ? "bg-gradient-to-r from-yellow-600 to-yellow-500" // Oro
+                ? `bg-[${neoBrutalColors.accent1}]`
                 : index === 1
-                ? "bg-gradient-to-r from-gray-400 to-gray-300" // Plata
-                : "bg-gradient-to-r from-yellow-800 to-yellow-700" // Bronce
+                  ? `bg-[${neoBrutalColors.accent2}]`
+                  : `bg-[${neoBrutalColors.background}]`
             }`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
             <div className="flex items-center space-x-4">
-              <span className="text-xl font-bold">
-                {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}
-              </span>
-              <span className="text-white">{estudiante.nombre || "Anónimo"}</span>
+              <span className="text-xl font-bold">{index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}</span>
+              <span className="text-black font-bold">{estudiante.nombreCompleto || "Anónimo"}</span>
             </div>
-            <span className="text-white font-bold">Top {index + 1}</span>
+            <span className="text-black font-bold">Top {index + 1}</span>
           </motion.div>
         ))}
       </div>
 
       {/* Posición del estudiante logueado */}
       {loggedInStudent && (
-        <div className="bg-blue-500 p-4 rounded-lg">
+        <NeoBrutalCard className={`bg-[${neoBrutalColors.accent1}]`}>
           <div className="flex items-center justify-between">
-            <span className="text-white">Tu posición:</span>
-            <span className="text-white font-bold">#{loggedInStudent.posicion || "N/A"}</span>
+            <span className="text-black font-bold">Tu posición:</span>
+            <span className="text-black font-bold">#{loggedInStudent.posicion || "N/A"}</span>
           </div>
-        </div>
+        </NeoBrutalCard>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default Leaderboard;
+export default Leaderboard
+

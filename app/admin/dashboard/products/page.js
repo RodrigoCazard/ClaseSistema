@@ -16,6 +16,8 @@ const schema = z.object({
   nombre: z.string().min(1, "El nombre es requerido"),
   precio: z.number().int().positive("El precio debe ser un número entero positivo"),
   descripcion: z.string().min(1, "La descripción es requerida"),
+  desbloqueable: z.boolean().default(false),
+  repetido: z.boolean().default(false),
 })
 
 export default function ManageProductsPage() {
@@ -28,10 +30,24 @@ export default function ManageProductsPage() {
     handleSubmit,
     reset,
     setValue,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
+    defaultValues: {
+      desbloqueable: false,
+      repetido: false,
+    },
   })
+
+  // Watch the repetido field to update desbloqueable automatically
+  const repetidoValue = watch("repetido")
+
+  useEffect(() => {
+    if (repetidoValue) {
+      setValue("desbloqueable", true)
+    }
+  }, [repetidoValue, setValue])
 
   useEffect(() => {
     const adminAuth = localStorage.getItem("adminAuth")
@@ -97,93 +113,147 @@ export default function ManageProductsPage() {
     )
   }
 
+  // Neobrutalism style classes
+  const neoBrutalInput =
+    "p-3 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none bg-white text-black font-bold focus:outline-none focus:ring-0 focus:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all"
+  const neoBrutalButton =
+    "p-3 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none font-bold transition-all hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px]"
+  const neoBrutalCheckbox = "w-6 h-6 border-4 border-black accent-[#FF8A65] focus:outline-none focus:ring-0"
+  const neoBrutalCard = "bg-[#FFD166] border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-none p-8"
+  const neoBrutalTable = "border-4 border-black bg-white text-black"
+  const neoBrutalTableHeader = "border-b-4 border-black bg-[#06D6A0] text-black font-bold"
+  const neoBrutalTableCell = "border-b-4 border-black p-3"
+
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-900 to-gray-900 text-white flex flex-col items-center justify-start p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#EF476F] text-black flex flex-col items-center justify-start p-8 relative overflow-hidden">
       <motion.button
         onClick={() => router.push("/admin/dashboard")}
-        className="absolute top-4 left-4 bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition-colors"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+        className={`absolute top-8 left-8 ${neoBrutalButton} bg-[#118AB2] text-white`}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
       >
         <FaArrowLeft />
       </motion.button>
       <motion.div
-        className="bg-gray-800 bg-opacity-80 p-8 rounded-lg shadow-lg w-full max-w-4xl backdrop-filter backdrop-blur-lg relative mt-16"
+        className={`${neoBrutalCard} w-full max-w-4xl relative mt-16`}
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
-        <h1 className="text-3xl font-bold mb-6 text-center">Gestión de Productos</h1>
+        <h1 className="text-3xl font-black mb-8 text-center">GESTIÓN DE PRODUCTOS</h1>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mb-8">
-          <div className="flex flex-col space-y-2">
+          <div className="flex flex-col space-y-4">
             <input
               {...register("nombre")}
               type="text"
               placeholder="Nombre del producto"
-              className="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`${neoBrutalInput} ${errors.nombre ? "border-red-500" : ""}`}
             />
-            {errors.nombre && <p className="text-red-500">{errors.nombre.message}</p>}
+            {errors.nombre && <p className="text-red-700 font-bold">{errors.nombre.message}</p>}
+
             <input
               {...register("precio", { valueAsNumber: true })}
               type="number"
               placeholder="Precio en puntos"
-              className="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`${neoBrutalInput} ${errors.precio ? "border-red-500" : ""}`}
             />
-            {errors.precio && <p className="text-red-500">{errors.precio.message}</p>}
+            {errors.precio && <p className="text-red-700 font-bold">{errors.precio.message}</p>}
+
             <textarea
               {...register("descripcion")}
               placeholder="Descripción del producto"
-              className="p-2 rounded-lg bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`${neoBrutalInput} min-h-[100px] ${errors.descripcion ? "border-red-500" : ""}`}
             />
-            {errors.descripcion && <p className="text-red-500">{errors.descripcion.message}</p>}
+            {errors.descripcion && <p className="text-red-700 font-bold">{errors.descripcion.message}</p>}
+
+            <div className="flex items-center space-x-3 p-3 bg-[#06D6A0] border-4 border-black">
+              <input
+                type="checkbox"
+                id="desbloqueable"
+                {...register("desbloqueable")}
+                className={neoBrutalCheckbox}
+                disabled={repetidoValue}
+              />
+              <label htmlFor="desbloqueable" className="cursor-pointer font-bold">
+                Desbloqueable {repetidoValue && "(Bloqueado por ser repetible)"}
+              </label>
+            </div>
+
+            <div className="flex items-center space-x-3 p-3 bg-[#118AB2] border-4 border-black">
+              <input type="checkbox" id="repetido" {...register("repetido")} className={neoBrutalCheckbox} />
+              <label htmlFor="repetido" className="cursor-pointer font-bold text-white">
+                Repetible
+              </label>
+            </div>
+
             <button
               type="submit"
-              className={`${editingProduct ? "bg-yellow-500 hover:bg-yellow-600" : "bg-green-500 hover:bg-green-600"} text-white p-2 rounded-lg transition-colors`}
+              className={`${neoBrutalButton} ${editingProduct ? "bg-[#FF8A65]" : "bg-[#06D6A0]"} text-black font-black mt-4`}
             >
-              {editingProduct ? "Actualizar Producto" : "Agregar Producto"}
+              {editingProduct ? "ACTUALIZAR PRODUCTO" : "AGREGAR PRODUCTO"}
             </button>
           </div>
         </form>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className={`w-full ${neoBrutalTable}`}>
             <thead>
-              <tr className="border-b border-gray-700">
-                <th className="py-2 px-4">Nombre</th>
-                <th className="py-2 px-4">Precio</th>
-                <th className="py-2 px-4">Descripción</th>
-                <th className="py-2 px-4">Acciones</th>
+              <tr className={neoBrutalTableHeader}>
+                <th className="p-3">Nombre</th>
+                <th className="p-3">Precio</th>
+                <th className="p-3">Descripción</th>
+                <th className="p-3">Desbloqueable</th>
+                <th className="p-3">Repetible</th>
+                <th className="p-3">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {products.map((product) => (
-                <tr key={product.id} className="border-b border-gray-700">
-                  <td className="py-2 px-4">{product.nombre}</td>
-                  <td className="py-2 px-4">{product.precio}</td>
-                  <td className="py-2 px-4">{product.descripcion}</td>
-                  <td className="py-2 px-4 flex items-center">
-                    <motion.button
-                      onClick={() => {
-                        setEditingProduct(product)
-                        setValue("nombre", product.nombre)
-                        setValue("precio", product.precio)
-                        setValue("descripcion", product.descripcion)
-                      }}
-                      className="mr-2 bg-yellow-500 text-white p-2 rounded-full hover:bg-yellow-600 transition-colors"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <FaEdit />
-                    </motion.button>
-                    <motion.button
-                      onClick={() => handleDeleteProduct(product.id)}
-                      className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <FaTrash />
-                    </motion.button>
+                <tr key={product.id} className="border-b-4 border-black">
+                  <td className={neoBrutalTableCell}>{product.nombre}</td>
+                  <td className={neoBrutalTableCell}>{product.precio}</td>
+                  <td className={neoBrutalTableCell}>{product.descripcion}</td>
+                  <td className={neoBrutalTableCell}>
+                    {product.desbloqueable ? (
+                      <span className="bg-[#06D6A0] text-black px-3 py-1 border-2 border-black font-bold">Sí</span>
+                    ) : (
+                      <span className="bg-[#EF476F] text-white px-3 py-1 border-2 border-black font-bold">No</span>
+                    )}
+                  </td>
+                  <td className={neoBrutalTableCell}>
+                    {product.repetido ? (
+                      <span className="bg-[#06D6A0] text-black px-3 py-1 border-2 border-black font-bold">Sí</span>
+                    ) : (
+                      <span className="bg-[#EF476F] text-white px-3 py-1 border-2 border-black font-bold">No</span>
+                    )}
+                  </td>
+                  <td className={neoBrutalTableCell}>
+                    <div className="flex items-center space-x-2">
+                      <motion.button
+                        onClick={() => {
+                          setEditingProduct(product)
+                          setValue("nombre", product.nombre)
+                          setValue("precio", product.precio)
+                          setValue("descripcion", product.descripcion)
+                          setValue("desbloqueable", product.desbloqueable || false)
+                          setValue("repetido", product.repetido || false)
+                        }}
+                        className={`${neoBrutalButton} bg-[#FF8A65] p-2`}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <FaEdit />
+                      </motion.button>
+                      <motion.button
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className={`${neoBrutalButton} bg-[#EF476F] text-white p-2`}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <FaTrash />
+                      </motion.button>
+                    </div>
                   </td>
                 </tr>
               ))}

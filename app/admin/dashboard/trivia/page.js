@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
 import { FaPlus, FaToggleOn, FaToggleOff, FaEdit, FaArrowLeft } from "react-icons/fa"
 import { collection, getDocs, doc, updateDoc } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 import AdminAddTrivia from "@/components/AdminAddTrivia"
 import toast from "react-hot-toast"
+import { NeoBrutalButton, NeoBrutalCard, neoBrutalColors, neoBrutalStyles } from "@/styles/neobrutalism"
 
 export default function TriviaDashboardPage() {
   const [trivias, setTrivias] = useState([])
@@ -56,61 +56,50 @@ export default function TriviaDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-900 to-gray-900 text-white flex flex-col items-center justify-start p-4 relative overflow-hidden">
-      <motion.button
+    <div
+      className={`min-h-screen bg-[${neoBrutalColors.background}] text-black flex flex-col items-center justify-start p-8 relative overflow-hidden`}
+    >
+      <NeoBrutalButton
         onClick={() => router.push("/admin/dashboard")}
-        className="absolute top-4 left-4 bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition-colors"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+        className={`absolute top-8 left-8 bg-[${neoBrutalColors.accent2}] text-white`}
       >
         <FaArrowLeft />
-      </motion.button>
-      <motion.div
-        className="bg-gray-800 bg-opacity-80 p-8 rounded-lg shadow-lg w-full max-w-4xl backdrop-filter backdrop-blur-lg relative mt-16"
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <h1 className="text-3xl font-bold mb-6 text-center">Gestión de Trivias</h1>
+      </NeoBrutalButton>
+      <NeoBrutalCard className="w-full max-w-4xl relative mt-16">
+        <h1 className="text-3xl font-black mb-8 text-center">Gestión de Trivias</h1>
 
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Trivias Disponibles</h2>
-            <motion.button
-              onClick={() => setShowAddTrivia(true)}
-              className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-colors"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
+            <NeoBrutalButton onClick={() => setShowAddTrivia(true)} className={`bg-[${neoBrutalColors.accent1}]`}>
               <FaPlus />
-            </motion.button>
+            </NeoBrutalButton>
           </div>
           {loading ? (
             <p>Cargando trivias...</p>
           ) : (
             <ul className="space-y-4">
               {trivias.map((trivia) => (
-                <li key={trivia.id} className="flex items-center justify-between bg-gray-700 p-4 rounded-lg">
+                <li key={trivia.id} className={`flex items-center justify-between ${neoBrutalStyles.card}`}>
                   <span>
                     {trivia.titulo} - {trivia.fecha}
                   </span>
                   <div className="flex items-center space-x-2">
-                    <button
+                    <NeoBrutalButton
                       onClick={() => toggleTriviaStatus(trivia.id, trivia.activo)}
-                      className={`p-2 rounded-full transition-colors ${trivia.activo ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"}`}
+                      className={
+                        trivia.activo ? `bg-[${neoBrutalColors.accent1}]` : `bg-[${neoBrutalColors.background}]`
+                      }
                     >
                       {trivia.activo ? (
                         <FaToggleOn className="text-white text-xl" />
                       ) : (
                         <FaToggleOff className="text-white text-xl" />
                       )}
-                    </button>
-                    <button
-                      onClick={() => setEditingTrivia(trivia)}
-                      className="bg-yellow-500 p-2 rounded-full hover:bg-yellow-600 transition-colors"
-                    >
+                    </NeoBrutalButton>
+                    <NeoBrutalButton onClick={() => setEditingTrivia(trivia)} className="bg-[#FF8A65]">
                       <FaEdit className="text-white" />
-                    </button>
+                    </NeoBrutalButton>
                   </div>
                 </li>
               ))}
@@ -138,7 +127,7 @@ export default function TriviaDashboardPage() {
             onCancel={() => setEditingTrivia(null)}
           />
         )}
-      </motion.div>
+      </NeoBrutalCard>
     </div>
   )
 }
